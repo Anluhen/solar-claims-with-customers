@@ -93,6 +93,10 @@ Sub SaveData(Optional ShowOnMacroList As Boolean = False)
 End Sub
 
 Sub RetrieveDataFromName(Optional ShowOnMacroList As Boolean = False)
+    
+    Dim colMap As Object
+    Set colMap = GetColumnHeadersMapping()
+    
     Dim wsForm As Worksheet, wsDados As Worksheet
     Dim dadosTable As ListObject
     Dim foundRow As Range
@@ -126,9 +130,9 @@ Sub RetrieveDataFromName(Optional ShowOnMacroList As Boolean = False)
     
     ' Search for the matching row
     Set foundRow = Nothing
-    For Each cell In dadosTable.ListColumns(2).DataBodyRange
-        If cell.Value & " - " & cell.Offset(0, 1).Value & " - " & cell.Offset(0, 5).Value = searchName Then
-            Set foundRow = cell.Offset(0, -1)
+    For Each cell In dadosTable.ListColumns(colMap("ID")).DataBodyRange
+        If cell.Value & " - " & cell.Cells(1, colMap("Cliente")).Value & " - " & cell.Cells(1, colMap("Descrição")).Value = searchName Then
+            Set foundRow = cell
             Exit For
         End If
     Next cell
@@ -144,20 +148,21 @@ Sub RetrieveDataFromName(Optional ShowOnMacroList As Boolean = False)
         wsForm.OLEObjects("ComboBoxID").Object.Value = foundRow.Value
     
         ' Read column B values
-        .Range("B6").Value = foundRow.Offset(0, 1).Value
-        .Range("B10").Value = foundRow.Offset(0, 2).Value
-        .Range("B14").Value = foundRow.Offset(0, 3).Value
-        .Range("B18").Value = foundRow.Offset(0, 4).Value
+        .Range("B6").Value = foundRow.Cells(1, colMap("Cliente")).Value
+        .Range("B10").Value = foundRow.Cells(1, colMap("Obra")).Value
+        .Range("B14").Value = foundRow.Cells(1, colMap("Tipo")).Value
+        .Range("B18").Value = foundRow.Cells(1, colMap("PM")).Value
+        .Range("B22").Value = foundRow.Cells(1, colMap("PEP")).Value
     
         ' Read column D values
-        .Range("D6").Value = foundRow.Offset(0, 5).Value
-        .Range("D10").Value = foundRow.Offset(0, 6).Value
-        .Range("D14").Value = foundRow.Offset(0, 7).Value
-        .Range("D18").Value = foundRow.Offset(0, 8).Value
+        .Range("D6").Value = foundRow.Cells(1, colMap("Descrição")).Value
+        .Range("D10").Value = foundRow.Cells(1, colMap("Justificativa")).Value
+        .Range("D14").Value = foundRow.Cells(1, colMap("Prestador")).Value
+        .Range("D18").Value = foundRow.Cells(1, colMap("Valor")).Value
         
         ' Read column F values
-        .Range("F6").Value = foundRow.Offset(0, 9).Value
-        .Range("F10").Value = foundRow.Offset(0, 11).Value
+        .Range("F6").Value = foundRow.Cells(1, colMap("Status")).Value
+        .Range("F10").Value = foundRow.Cells(1, colMap("Observações")).Value
     End With
 End Sub
 
