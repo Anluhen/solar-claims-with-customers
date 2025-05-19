@@ -1,0 +1,260 @@
+Attribute VB_Name = "Pleitos"
+' ----- Version -----
+'        1.1.0
+' -------------------
+
+Sub SaveData(Optional ShowOnMacroList As Boolean = False)
+    Dim wsForm As Worksheet, wsDados As Worksheet
+    Dim dadosTable As ListObject
+    Dim tblRow As ListRow
+    Dim newID As String
+    Dim userResponse As VbMsgBoxResult
+    
+    ' Set worksheet reference
+    Set wsForm = ThisWorkbook.Sheets("Formulário")
+    Set wsDados = ThisWorkbook.Sheets("Dados")
+    
+    ' Check if table "Dados" exists
+    On Error Resume Next
+    Set dadosTable = wsDados.ListObjects("Dados")
+    On Error GoTo 0
+    
+    ' If the table doesn't exist, exit sub
+    If dadosTable Is Nothing Then
+        MsgBox "Tabela 'Dados' não encontrada!", vbExclamation
+        Exit Sub
+    End If
+    
+    newID = wsForm.OLEObjects("ComboBoxID").Object.Value
+    
+    ' If ComboBoxID is not empty, prompt the user
+    If Trim(newID) <> "" Then
+        userResponse = MsgBox("Esse aditivo já foi cadastrado. Deseja sobrescrever?", vbYesNoCancel + vbQuestion, "Confirmação")
+
+        Select Case userResponse
+            Case vbYes
+                newID = Val(newID) ' Use ComboBoxID.Value as new ID
+                ' Search for the ID in the first column of the table
+                Set tblRow = dadosTable.ListRows(dadosTable.ListColumns(1).DataBodyRange.Find(What:=newID, LookAt:=xlWhole).Row - dadosTable.DataBodyRange.Row + 1)
+            Case vbNo
+                ' Proceed with generating new ID
+                newID = Application.WorksheetFunction.Max(dadosTable.ListColumns(1).DataBodyRange) + 1
+                wsForm.OLEObjects("ComboBoxID").Object.Value = newID
+                ' Add a new row to the table
+                Set tblRow = dadosTable.ListRows.Add
+            Case vbCancel
+                Exit Sub ' Exit without saving
+        End Select
+    Else
+        If dadosTable.ListColumns(1).DataBodyRange Is Nothing Then
+            newID = 1
+        Else
+            newID = Application.WorksheetFunction.Max(dadosTable.ListColumns(1).DataBodyRange) + 1
+        End If
+        
+        wsForm.OLEObjects("ComboBoxID").Object.Value = newID
+        
+        wsForm.OLEObjects("ComboBoxName").Object.Value = wsForm.Range("B6").Value & " - " & wsForm.Range("B10").Value & " - " & wsForm.Range("D6").Value
+        
+        ' Add a new row to the table
+        Set tblRow = dadosTable.ListRows.Add
+    End If
+    
+    ' Assign values to the new row
+    With tblRow.Range
+        ' Set new ID
+        .Cells(1, 1).Value = newID ' First column value
+        
+        ' Read column B values
+        .Cells(1, 2).Value = wsForm.Range("B6").Value
+        .Cells(1, 3).Value = wsForm.Range("B10").Value
+        .Cells(1, 4).Value = wsForm.Range("B14").Value
+        .Cells(1, 5).Value = wsForm.Range("B18").Value
+        
+        ' Read column D values
+        .Cells(1, 6).Value = wsForm.Range("D6").Value
+        .Cells(1, 7).Value = wsForm.Range("D10").Value
+        .Cells(1, 8).Value = wsForm.Range("D14").Value
+        .Cells(1, 9).Value = wsForm.Range("D18").Value
+        
+        ' Read column F values
+        .Cells(1, 10).Value = wsForm.Range("F6").Value
+        .Cells(1, 11).Value = "" 'Clear date if ovewriten in case an e-mail was already sent
+        .Cells(1, 12).Value = wsForm.Range("F10").Value
+        
+    End With
+    
+    ' MsgBox "Dados salvos com sucesso!", vbInformation
+End Sub
+
+Sub RetrieveDataFromName(Optional ShowOnMacroList As Boolean = False)
+    Dim wsForm As Worksheet, wsDados As Worksheet
+    Dim dadosTable As ListObject
+    Dim foundRow As Range
+    Dim searchName As String
+    
+    ' Set worksheet reference
+    Set wsForm = ThisWorkbook.Sheets("Formulário")
+    Set wsDados = ThisWorkbook.Sheets("Dados")
+    
+    ' Check if table "Dados" exists
+    On Error Resume Next
+    Set dadosTable = wsDados.ListObjects("Dados")
+    On Error GoTo 0
+    
+    ' If the table doesn't exist, exit sub
+    If dadosTable Is Nothing Then
+        MsgBox "Tabela 'Dados' não encontrada!", vbExclamation
+        Exit Sub
+    End If
+    
+    wsForm.OLEObjects("ComboBoxName").Top = wsForm.OLEObjects("ComboBoxID").Top + 38
+    wsForm.OLEObjects("ComboBoxName").Left = wsForm.OLEObjects("ComboBoxID").Left
+    
+    ' Get the ID to search from ComboBox
+    If wsForm.OLEObjects("ComboBoxName").Object.Value <> "" Then
+        searchName = wsForm.OLEObjects("ComboBoxName").Object.Value
+    Else
+        'ClearForm
+        Exit Sub
+    End If
+    
+    ' Search for the matching row
+    Set foundRow = Nothing
+    For Each cell In dadosTable.ListColumns(2).DataBodyRange
+        If cell.Value & " - " & cell.Offset(0, 1).Value & " - " & cell.Offset(0, 5).Value = searchName Then
+            Set foundRow = cell.Offset(0, -1)
+            Exit For
+        End If
+    Next cell
+    
+    ' If Name is not found, exit sub
+    If foundRow Is Nothing Then
+        MsgBox "Nenhuma obra encontrada!", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Populate worksheet with retrieved data
+    With wsForm
+        wsForm.OLEObjects("ComboBoxID").Object.Value = foundRow.Value
+    
+        ' Read column B values
+        .Range("B6").Value = foundRow.Offset(0, 1).Value
+        .Range("B10").Value = foundRow.Offset(0, 2).Value
+        .Range("B14").Value = foundRow.Offset(0, 3).Value
+        .Range("B18").Value = foundRow.Offset(0, 4).Value
+    
+        ' Read column D values
+        .Range("D6").Value = foundRow.Offset(0, 5).Value
+        .Range("D10").Value = foundRow.Offset(0, 6).Value
+        .Range("D14").Value = foundRow.Offset(0, 7).Value
+        .Range("D18").Value = foundRow.Offset(0, 8).Value
+        
+        ' Read column F values
+        .Range("F6").Value = foundRow.Offset(0, 9).Value
+        .Range("F10").Value = foundRow.Offset(0, 11).Value
+    End With
+End Sub
+
+Sub RetrieveDataFromID(Optional ShowOnMacroList As Boolean = False)
+    Dim wsForm As Worksheet, wsDados As Worksheet
+    Dim dadosTable As ListObject
+    Dim foundRow As Range
+    Dim searchID As Double
+    
+    ' Set worksheet reference
+    Set wsForm = ThisWorkbook.Sheets("Formulário")
+    Set wsDados = ThisWorkbook.Sheets("Dados")
+    
+    ' Check if table "Dados" exists
+    On Error Resume Next
+    Set dadosTable = wsDados.ListObjects("Dados")
+    On Error GoTo 0
+    
+    ' If the table doesn't exist, exit sub
+    If dadosTable Is Nothing Then
+        MsgBox "Tabela 'Dados' não encontrada!", vbExclamation
+        Exit Sub
+    End If
+    
+    wsForm.OLEObjects("ComboBoxName").Top = wsForm.OLEObjects("ComboBoxID").Top + 38
+    wsForm.OLEObjects("ComboBoxName").Left = wsForm.OLEObjects("ComboBoxID").Left
+    
+    ' Get the ID to search from ComboBox
+    If wsForm.OLEObjects("ComboBoxID").Object.Value <> "" Then
+        searchID = wsForm.OLEObjects("ComboBoxID").Object.Value
+    Else
+        'ClearForm
+        Exit Sub
+    End If
+    
+    ' Search for the ID in the first column of the table
+    Set foundRow = Nothing
+    On Error Resume Next
+    Set foundRow = dadosTable.ListColumns(1).DataBodyRange.Find(What:=searchID, LookAt:=xlWhole)
+    On Error GoTo 0
+    
+    ' If ID is not found, exit sub
+    If foundRow Is Nothing Then
+        MsgBox "ID não encontrado!", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Populate worksheet with retrieved data
+    With wsForm
+        wsForm.OLEObjects("ComboBoxName").Object.Value = foundRow.Offset(0, 1).Value & " - " & foundRow.Offset(0, 2).Value & " - " & foundRow.Offset(0, 5).Value
+        
+        ' Read column B values
+        .Range("B6").Value = foundRow.Offset(0, 1).Value
+        .Range("B10").Value = foundRow.Offset(0, 2).Value
+        .Range("B14").Value = foundRow.Offset(0, 3).Value
+        .Range("B18").Value = foundRow.Offset(0, 4).Value
+        
+        ' Read column D values
+        .Range("D6").Value = foundRow.Offset(0, 5).Value
+        .Range("D10").Value = foundRow.Offset(0, 6).Value
+        .Range("D14").Value = foundRow.Offset(0, 7).Value
+        .Range("D18").Value = foundRow.Offset(0, 8).Value
+        
+        ' Read column F values
+        .Range("F6").Value = foundRow.Offset(0, 9).Value
+        .Range("F10").Value = foundRow.Offset(0, 11).Value
+    End With
+End Sub
+
+Sub ClearForm(Optional ShowOnMacroList As Boolean = False)
+    
+    Dim wsForm As Worksheet
+    
+    ' Set worksheet reference
+    Set wsForm = ThisWorkbook.Sheets("Formulário")
+    
+    If wsForm.OLEObjects("ComboBoxID").Object.Value = "" Then
+        If MsgBox("Esses dados não foram salvos. Deseja limpá-los mesmo assim?", vbYesNo) = vbNo Then
+            Exit Sub
+        End If
+    End If
+    
+    ' Populate worksheet with retrieved data
+    With wsForm
+        .OLEObjects("ComboBoxID").Object.Value = ""
+        .OLEObjects("ComboBoxName").Object.Value = ""
+        .OLEObjects("ComboBoxName").Width = 123
+        
+        ' Read column B values
+        .Range("B6").Value = ""
+        .Range("B10").Value = ""
+        .Range("B14").Value = ""
+        .Range("B18").Value = ""
+        
+        ' Read column D values
+        .Range("D6").Value = ""
+        .Range("D10").Value = ""
+        .Range("D14").Value = ""
+        .Range("D18").Value = ""
+    
+        ' Read column F values
+        .Range("F6").Value = ""
+        .Range("F10").Value = ""
+    End With
+End Sub
