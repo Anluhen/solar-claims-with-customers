@@ -251,6 +251,7 @@ Sub ClearForm(Optional ShowOnMacroList As Boolean = False)
         .Range("B10").Value = ""
         .Range("B14").Value = ""
         .Range("B18").Value = ""
+        .Range("B22").Value = ""
         
         ' Read column D values
         .Range("D6").Value = ""
