@@ -1,6 +1,6 @@
 Attribute VB_Name = "Pleitos"
 ' ----- Version -----
-'        1.1.0
+'        1.2.0
 ' -------------------
 
 Sub SaveData(Optional ShowOnMacroList As Boolean = False)
@@ -258,3 +258,26 @@ Sub ClearForm(Optional ShowOnMacroList As Boolean = False)
         .Range("F10").Value = ""
     End With
 End Sub
+
+Public Function GetColumnHeadersMapping() As Object
+    Dim headers As Object
+    Set headers = CreateObject("Scripting.Dictionary")
+    
+    ' Add each header from the provided table to the dictionary,
+    ' mapping it to its column position.
+    headers.Add "ID", 1
+    headers.Add "Obra", 2
+    headers.Add "Cliente", 3
+    headers.Add "Tipo", 4
+    headers.Add "PM", 5
+    headers.Add "PEP", 6
+    headers.Add "Descri��o", 7
+    headers.Add "Justificativa", 8
+    headers.Add "Prestador", 9
+    headers.Add "Valor", 10
+    headers.Add "Status", 11
+    headers.Add "Data", 12
+    headers.Add "Observa��es", 13
+
+    Set GetColumnHeadersMapping = headers
+End Function
