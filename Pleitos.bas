@@ -4,6 +4,10 @@ Attribute VB_Name = "Pleitos"
 ' -------------------
 
 Sub SaveData(Optional ShowOnMacroList As Boolean = False)
+    
+    Dim colMap As Object
+    Set colMap = GetColumnHeadersMapping()
+        
     Dim wsForm As Worksheet, wsDados As Worksheet
     Dim dadosTable As ListObject
     Dim tblRow As ListRow
@@ -46,10 +50,10 @@ Sub SaveData(Optional ShowOnMacroList As Boolean = False)
                 Exit Sub ' Exit without saving
         End Select
     Else
-        If dadosTable.ListColumns(1).DataBodyRange Is Nothing Then
+        If dadosTable.ListColumns(colMap("ID")).DataBodyRange Is Nothing Then
             newID = 1
         Else
-            newID = Application.WorksheetFunction.Max(dadosTable.ListColumns(1).DataBodyRange) + 1
+            newID = Application.WorksheetFunction.Max(dadosTable.ListColumns(colMap("ID")).DataBodyRange) + 1
         End If
         
         wsForm.OLEObjects("ComboBoxID").Object.Value = newID
@@ -63,24 +67,25 @@ Sub SaveData(Optional ShowOnMacroList As Boolean = False)
     ' Assign values to the new row
     With tblRow.Range
         ' Set new ID
-        .Cells(1, 1).Value = newID ' First column value
+        .Cells(1, colMap("ID")).Value = newID ' First column value
         
         ' Read column B values
-        .Cells(1, 2).Value = wsForm.Range("B6").Value
-        .Cells(1, 3).Value = wsForm.Range("B10").Value
-        .Cells(1, 4).Value = wsForm.Range("B14").Value
-        .Cells(1, 5).Value = wsForm.Range("B18").Value
+        .Cells(1, colMap("Obra")).Value = wsForm.Range("B6").Value
+        .Cells(1, colMap("Cliente")).Value = wsForm.Range("B10").Value
+        .Cells(1, colMap("Tipo")).Value = wsForm.Range("B14").Value
+        .Cells(1, colMap("PM")).Value = wsForm.Range("B18").Value
+        .Cells(1, colMap("PEP")).Value = wsForm.Range("B22").Value
         
         ' Read column D values
-        .Cells(1, 6).Value = wsForm.Range("D6").Value
-        .Cells(1, 7).Value = wsForm.Range("D10").Value
-        .Cells(1, 8).Value = wsForm.Range("D14").Value
-        .Cells(1, 9).Value = wsForm.Range("D18").Value
+        .Cells(1, colMap("Descrição")).Value = wsForm.Range("D6").Value
+        .Cells(1, colMap("Justificativa")).Value = wsForm.Range("D10").Value
+        .Cells(1, colMap("Prestador")).Value = wsForm.Range("D14").Value
+        .Cells(1, colMap("Valor")).Value = wsForm.Range("D18").Value
         
         ' Read column F values
-        .Cells(1, 10).Value = wsForm.Range("F6").Value
-        .Cells(1, 11).Value = "" 'Clear date if ovewriten in case an e-mail was already sent
-        .Cells(1, 12).Value = wsForm.Range("F10").Value
+        .Cells(1, colMap("Status")).Value = wsForm.Range("F6").Value
+        .Cells(1, colMap("Data")).Value = "" 'Clear date if ovewriten in case an e-mail was already sent
+        .Cells(1, colMap("Observações")).Value = wsForm.Range("F10").Value
         
     End With
     
@@ -271,13 +276,13 @@ Public Function GetColumnHeadersMapping() As Object
     headers.Add "Tipo", 4
     headers.Add "PM", 5
     headers.Add "PEP", 6
-    headers.Add "Descriï¿½ï¿½o", 7
+    headers.Add "Descrição", 7
     headers.Add "Justificativa", 8
     headers.Add "Prestador", 9
     headers.Add "Valor", 10
     headers.Add "Status", 11
     headers.Add "Data", 12
-    headers.Add "Observaï¿½ï¿½es", 13
+    headers.Add "Observações", 13
 
     Set GetColumnHeadersMapping = headers
 End Function
